@@ -1,327 +1,352 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Relatório Fabrika Mall Pará de Minas</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Relatório Fabrika Mall Pará de Minas</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-
 <body class="bg-red-50">
-    <div id="root"></div>
+  <div id="root"></div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+  <!-- React + Babel -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
 
-    <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+  <!-- Firebase compat (usamos a compat para rodar direto no browser sem bundler) -->
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 
+  <script type="text/babel">
+    const { useState, useEffect } = React;
 
-    <script type="text/babel">
+    // ===== FIREBASE CONFIG =====
+    const firebaseConfig = {
+      apiKey: "AIzaSyANW3zGkmJM7uDBhZ2JhDzzp_KfSSR22zA",
+      authDomain: "relatorio-sistema.firebaseapp.com",
+      projectId: "relatorio-sistema",
+      storageBucket: "relatorio-sistema.firebasestorage.app",
+      messagingSenderId: "986388355222",
+      appId: "1:986388355222:web:dc464f96ee027846ad0ab7"
+    };
 
+    // inicializa compat
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyANW3zGkmJM7uDBhZ2JhDzzp_KfSSR22zA",
-            authDomain: "relatorio-sistema.firebaseapp.com",
-            projectId: "relatorio-sistema",
-            storageBucket: "relatorio-sistema.firebasestorage.app",
-            messagingSenderId: "986388355222",
-            appId: "1:986388355222:web:dc464f96ee027846ad0ab7"
+    // placeholder para a imagem de capa (troque pela sua URL pública)
+    const FOTO_CAPA = "https://via.placeholder.com/200x200.png?text=Fabrika+Mall";
+
+    // Ícones simples
+    const Icons = {
+      Send: () => (<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>),
+      Trash: () => (<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>),
+      Edit: () => (<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>)
+    };
+
+    // ----- Components -----
+    function Login({ perfis, onLogin }) {
+      const [passwords, setPasswords] = useState({});
+      function updatePass(id, value) { setPasswords(prev => ({...prev, [id]: value})); }
+
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-red-200 p-6">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 text-center">
+            <img src={FOTO_CAPA} className="w-28 h-28 object-cover rounded-full mx-auto mb-4 border-4 border-red-600" />
+            <h1 className="text-2xl font-bold text-red-700">Relatório Fabrika Mall Pará de Minas</h1>
+            <p className="text-gray-600 mb-6">Escolha o seu perfil para acessar o sistema</p>
+
+            <div className="space-y-4">
+              {perfis.map(p => (
+                <div key={p.id} className="flex flex-col gap-2">
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => {
+                        if (p.tipo === 'gerente') {
+                          const pass = passwords[p.id] || '';
+                          onLogin(p, pass);
+                        } else {
+                          onLogin(p);
+                        }
+                      }}
+                      className="flex-1 bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl font-semibold"
+                    >{p.nome}</button>
+
+                    <button
+                      onClick={() => { if (p.tipo !== 'gerente') return; setPasswords(prev => ({ ...prev, [p.id]: '' })) }}
+                      className="ml-2 px-4 py-3 bg-white border rounded-xl"
+                    >Limpar</button>
+                  </div>
+
+                  {p.tipo === 'gerente' && (
+                    <input
+                      type="password"
+                      value={passwords[p.id] || ''}
+                      onChange={(e) => updatePass(p.id, e.target.value)}
+                      placeholder={`Senha para ${p.nome}`}
+                      className="w-full p-2 border rounded"
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function Card({ r, currentUser, onEdit, onDelete }) {
+      const dataLocal = new Date(r.data).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+      function podeAlterar() {
+        const d = new Date(r.data);
+        const hoje = new Date();
+        const mesmoDia = d.getFullYear() === hoje.getFullYear() && d.getMonth() === hoje.getMonth() && d.getDate() === hoje.getDate();
+        return mesmoDia && (currentUser.tipo === 'gerente' || currentUser.nome === r.brigadista);
+      }
+
+      return (
+        <div className="bg-white p-4 rounded-xl border shadow-sm">
+          <div className="flex justify-between">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-red-600 font-semibold">{r.brigadista}</span>
+                <span className="text-gray-500 text-sm">{dataLocal}</span>
+              </div>
+              <p className="mt-2 text-gray-800">{r.descricao}</p>
+            </div>
+
+            <div className="flex flex-col items-end gap-2">
+              {podeAlterar() && (
+                <>
+                  <button onClick={() => onEdit(r.id)} className="flex items-center gap-2 text-sm px-3 py-1 border rounded text-red-600"><Icons.Edit/> Editar</button>
+                  <button onClick={() => onDelete(r.id)} className="flex items-center gap-2 text-sm px-3 py-1 border rounded text-red-600"><Icons.Trash/> Apagar</button>
+                </>
+              )}
+            </div>
+          </div>
+
+          {r.foto && <img src={r.foto} className="mt-3 w-full h-56 object-cover rounded-lg" />}
+        </div>
+      );
+    }
+
+    function App() {
+      const perfis = [
+        { id: 'brigadista', nome: 'Brigadista', tipo: 'operador' },
+        { id: 'junio', nome: 'Junio', tipo: 'gerente', senha: 'Codigojunio' },
+        { id: 'shopping', nome: 'Gerente do Shopping', tipo: 'gerente', senha: 'Codigogerente' }
+      ];
+
+      const [user, setUser] = useState(null);
+      const [relatorios, setRelatorios] = useState([]);
+      const [obs, setObs] = useState('');
+
+      // formulário
+      const [brigadistaNome, setBrigadistaNome] = useState('');
+      const [descricao, setDescricao] = useState('');
+      const [fotoPreview, setFotoPreview] = useState(null);
+
+      // carrega relatórios e observação (ouve em tempo real)
+      useEffect(() => {
+        if (!user) return; // só liga listeners após login
+
+        // listener relatorios (ordenados por data decrescente)
+        const relRef = db.collection('relatorios').orderBy('data', 'desc');
+        const unsubscribeRel = relRef.onSnapshot(snapshot => {
+          const arr = [];
+          snapshot.forEach(doc => arr.push({ id: doc.id, ...doc.data() }));
+          setRelatorios(arr);
+        }, err => {
+          console.error('Erro no snapshot relatorios:', err);
+        });
+
+        // listener observacao (doc singleton)
+        const obsDocRef = db.collection('obsGerentes').doc('singleton');
+        const unsubscribeObs = obsDocRef.onSnapshot(doc => {
+          if (doc.exists) setObs(doc.data().texto || '');
+          else setObs('');
+        }, err => {
+          console.error('Erro no snapshot obs:', err);
+        });
+
+        return () => {
+          unsubscribeRel();
+          unsubscribeObs();
+        };
+      }, [user]);
+
+      function handleLogin(perfil, password) {
+        if (perfil.tipo === 'gerente') {
+          if (!password || password !== perfil.senha) {
+            alert('Senha incorreta para ' + perfil.nome);
+            return;
+          }
+        }
+        setUser(perfil);
+      }
+
+      // enviar relatório (salva no Firestore)
+      async function enviar() {
+        if (!brigadistaNome.trim()) return alert('Digite o nome do brigadista (campo obrigatório)');
+        if (!descricao.trim()) return alert('Digite a descrição (campo obrigatório)');
+
+        const novo = {
+          brigadista: brigadistaNome.trim(),
+          descricao: descricao.trim(),
+          foto: fotoPreview || null,
+          data: new Date().toISOString()
         };
 
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-
-        const { useState, useEffect } = React;
-        const FOTO_CAPA = "/mnt/data/fabrika nall.png"; // caminho do arquivo enviado
-
-        const Icons = {
-            Camera: () => (
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-            ),
-            Send: () => (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                </svg>
-            ),
-            Trash: () => (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-            ),
-            Edit: () => (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
-                </svg>
-            )
-        };
-
-        function Login({ perfis, onLogin }) {
-            const [passwords, setPasswords] = useState({});
-
-            function updatePass(id, value) {
-                setPasswords(prev => ({ ...prev, [id]: value }));
-            }
-
-            return (
-                <div className="min-h-screen flex items-center justify-center bg-red-200 p-6">
-                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 text-center">
-                        <img src={FOTO_CAPA} className="w-28 h-28 object-cover rounded-full mx-auto mb-4 border-4 border-red-600" />
-                        <h1 className="text-2xl font-bold text-red-700">Relatório Fabrika Mall Pará de Minas</h1>
-                        <p className="text-gray-600 mb-6">Escolha o seu perfil para acessar o sistema</p>
-
-                        <div className="space-y-4">
-                            {perfis.map(p => (
-                                <div key={p.id} className="flex flex-col gap-2">
-                                    <div className="flex gap-3">
-                                        <button
-                                            onClick={() => {
-                                                if (p.tipo === 'gerente') {
-                                                    const pass = passwords[p.id] || '';
-                                                    onLogin(p, pass);
-                                                } else {
-                                                    onLogin(p);
-                                                }
-                                            }}
-                                            className="flex-1 bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl font-semibold"
-                                        >{p.nome}</button>
-                                        {/* botão separado para limpar eventual input */}
-                                        <button onClick={() => { if (p.tipo !== 'gerente') return; setPasswords(prev => ({ ...prev, [p.id]: '' })) }}
-                                            className="ml-2 px-4 py-3 bg-white border rounded-xl">Limpar</button>
-                                    </div>
-
-                                    {p.tipo === 'gerente' && (
-                                        <input
-                                            type="password"
-                                            value={passwords[p.id] || ''}
-                                            onChange={(e) => updatePass(p.id, e.target.value)}
-                                            placeholder={`Senha para ${p.nome}`}
-                                            className="w-full p-2 border rounded"
-                                        />
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-
-                    </div>
-                </div>
-            );
+        try {
+          await db.collection('relatorios').add(novo);
+          // limpa campos
+          setBrigadistaNome(''); setDescricao(''); setFotoPreview(null);
+        } catch (err) {
+          console.error('Erro ao adicionar relatorio:', err);
+          alert('Erro ao salvar (ver console).');
         }
+      }
 
-        function Card({ r, currentUser, onEdit, onDelete }) {
-            const dataLocal = new Date(r.data).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+      // foto -> base64
+      function handleFoto(e) {
+        const f = e.target.files[0];
+        if (!f) return;
+        const reader = new FileReader();
+        reader.onloadend = () => setFotoPreview(reader.result);
+        reader.readAsDataURL(f);
+      }
 
-            function podeAlterar() {
-                const d = new Date(r.data);
-                const hoje = new Date();
-                const mesmoDia = d.getFullYear() === hoje.getFullYear() && d.getMonth() === hoje.getMonth() && d.getDate() === hoje.getDate();
-                return mesmoDia && (currentUser.tipo === 'gerente' || currentUser.nome === r.brigadista);
-            }
+      function podeAlterarRel(r) {
+        const d = new Date(r.data);
+        const hoje = new Date();
+        return d.getFullYear() === hoje.getFullYear() && d.getMonth() === hoje.getMonth() && d.getDate() === hoje.getDate() && (user.tipo === 'gerente' || user.nome === r.brigadista);
+      }
 
-            return (
-                <div className="bg-white p-4 rounded-xl border shadow-sm">
-                    <div className="flex justify-between">
-                        <div>
-                            <div className="flex items-center gap-2">
-                                <span className="text-red-600 font-semibold">{r.brigadista}</span>
-                                <span className="text-gray-500 text-sm">{dataLocal}</span>
-                            </div>
-                            <p className="mt-2 text-gray-800">{r.descricao}</p>
-                        </div>
+      async function editar(id) {
+        const r = relatorios.find(x => x.id === id);
+        if (!r) return;
+        if (!podeAlterarRel(r)) return alert('Só é possível editar no mesmo dia e se for autor ou gerente');
 
-                        <div className="flex flex-col items-end gap-2">
-                            {podeAlterar() && (
-                                <>
-                                    <button onClick={() => onEdit(r.id)} className="flex items-center gap-2 text-sm px-3 py-1 border rounded text-red-600">
-                                        <Icons.Edit /> Editar
-                                    </button>
-                                    <button onClick={() => onDelete(r.id)} className="flex items-center gap-2 text-sm px-3 py-1 border rounded text-red-600">
-                                        <Icons.Trash /> Apagar
-                                    </button>
-                                </>
-                            )}
-                        </div>
-                    </div>
+        const nova = prompt('Editar descrição', r.descricao);
+        if (nova === null) return; // cancelou
 
-                    {r.foto && <img src={r.foto} className="mt-3 w-full h-56 object-cover rounded-lg" />}
-                </div>
-            );
+        try {
+          await db.collection('relatorios').doc(id).update({ descricao: nova });
+        } catch (err) {
+          console.error('Erro ao editar:', err);
+          alert('Erro ao editar (ver console).');
         }
+      }
 
-        function App() {
-            const perfis = [
-                { id: 'brigadista', nome: 'Brigadista', tipo: 'operador' },
-                { id: 'junio', nome: 'Junio', tipo: 'gerente', senha: 'Codigojunio' },
-                { id: 'shopping', nome: 'Gerente do Shopping', tipo: 'gerente', senha: 'Codigogerente' }
-            ];
+      async function apagar(id) {
+        const r = relatorios.find(x => x.id === id);
+        if (!r) return;
+        if (!podeAlterarRel(r)) return alert('Só é possível apagar no mesmo dia e se for autor ou gerente');
 
-            const [user, setUser] = useState(null);
-            const [relatorios, setRelatorios] = useState([]);
-            const [obs, setObs] = useState('');
-
-            // formulário
-            const [brigadistaNome, setBrigadistaNome] = useState('');
-            const [descricao, setDescricao] = useState('');
-            const [fotoPreview, setFotoPreview] = useState(null);
-
-            // login passwords pass-through
-            useEffect(() => {
-                const dados = localStorage.getItem('relatorios');
-                const obsArq = localStorage.getItem('obsGerentes');
-                if (dados) setRelatorios(JSON.parse(dados));
-                if (obsArq) setObs(obsArq);
-            }, []);
-
-            function handleLogin(perfil, password) {
-                if (perfil.tipo === 'gerente') {
-                    if (!password || password !== perfil.senha) {
-                        alert('Senha incorreta para ' + perfil.nome);
-                        return;
-                    }
-                }
-                setUser(perfil);
-            }
-
-            function salvarRel(lista) {
-                localStorage.setItem('relatorios', JSON.stringify(lista));
-                setRelatorios(lista);
-            }
-
-            function enviar() {
-                if (!brigadistaNome.trim()) return alert('Digite o nome do brigadista (campo obrigatório)');
-                if (!descricao.trim()) return alert('Digite a descrição (campo obrigatório)');
-
-                const novo = { id: Date.now().toString(), brigadista: brigadistaNome.trim(), descricao: descricao.trim(), foto: fotoPreview, data: new Date().toISOString() };
-                salvarRel([novo, ...relatorios]);
-                setBrigadistaNome(''); setDescricao(''); setFotoPreview(null);
-            }
-
-            function handleFoto(e) {
-                const f = e.target.files[0];
-                if (!f) return;
-                const reader = new FileReader();
-                reader.onloadend = () => setFotoPreview(reader.result);
-                reader.readAsDataURL(f);
-            }
-
-            function podeAlterarRel(r) {
-                const d = new Date(r.data);
-                const hoje = new Date();
-                return d.getFullYear() === hoje.getFullYear() && d.getMonth() === hoje.getMonth() && d.getDate() === hoje.getDate() && (user.tipo === 'gerente' || user.nome === r.brigadista);
-            }
-
-            function editar(id) {
-                const r = relatorios.find(x => x.id === id);
-                if (!r) return;
-                if (!podeAlterarRel(r)) return alert('Só é possível editar no mesmo dia e se for autor ou gerente');
-                const nova = prompt('Editar descrição', r.descricao);
-                if (nova === null) return; // cancelou
-                r.descricao = nova;
-                salvarRel([...relatorios]);
-            }
-
-            function apagar(id) {
-                const r = relatorios.find(x => x.id === id);
-                if (!r) return;
-                if (!podeAlterarRel(r)) return alert('Só é possível apagar no mesmo dia e se for autor ou gerente');
-                if (!confirm('Confirma exclusão?')) return;
-                salvarRel(relatorios.filter(x => x.id !== id));
-            }
-
-            function salvarObservacao() {
-                localStorage.setItem('obsGerentes', obs);
-                alert('Observação salva');
-            }
-
-            if (!user) return <Login perfis={perfis} onLogin={handleLogin} />;
-
-            return (
-                <div className="min-h-screen p-6 bg-red-50">
-                    <div className="max-w-5xl mx-auto space-y-6">
-                        <header className="flex items-center justify-between bg-white p-4 rounded-xl shadow">
-                            <div className="flex items-center gap-4">
-                                <img src={FOTO_CAPA} className="w-16 h-16 rounded-full border-4 border-red-600" />
-                                <div>
-                                    <h1 className="text-xl font-bold text-red-700">Relatório Fabrika Mall Pará de Minas</h1>
-                                    <p className="text-gray-600">Logado como: <span className="font-semibold">{user.nome}</span></p>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-3">
-                                <button onClick={() => { setUser(null); }} className="px-4 py-2 bg-white border rounded text-red-600">Sair</button>
-                            </div>
-                        </header>
-
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-
-                            {user.tipo === 'operador' && (
-                                <div className="bg-white p-6 rounded-xl shadow">
-                                    <h2 className="text-lg font-bold text-red-600 mb-4">Enviar Relatório</h2>
-
-                                    <label className="text-sm font-medium">Nome do Brigadista (obrigatório)</label>
-                                    <input value={brigadistaNome} onChange={e => setBrigadistaNome(e.target.value)} className="w-full p-2 border rounded mb-3" />
-
-                                    <label className="text-sm font-medium">Descrição (obrigatório)</label>
-                                    <textarea value={descricao} onChange={e => setDescricao(e.target.value)} rows={4} className="w-full p-2 border rounded mb-3" />
-
-                                    <label className="block mb-3">
-                                        <span className="text-sm">Foto (opcional)</span>
-                                        <input type="file" accept="image/*" onChange={handleFoto} className="mt-2" />
-                                    </label>
-
-                                    {fotoPreview && (
-                                        <div className="relative mb-3">
-                                            <img src={fotoPreview} className="w-full h-48 object-cover rounded" />
-                                            <button onClick={() => setFotoPreview(null)} className="absolute top-2 right-2 bg-red-600 text-white p-2 rounded">Excluir</button>
-                                        </div>
-                                    )}
-
-                                    <div className="flex gap-3">
-                                        <button onClick={enviar} className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded font-semibold flex items-center justify-center gap-2"><Icons.Send />Enviar</button>
-                                        <button onClick={() => { setBrigadistaNome(''); setDescricao(''); setFotoPreview(null); }} className="flex-1 bg-white border rounded py-2">Limpar</button>
-                                    </div>
-                                </div>
-                            )}
-
-                            <div className={user.tipo === 'operador' ? 'md:col-span-2' : 'md:col-span-3'}>
-                                <div className="bg-white p-6 rounded-xl shadow">
-                                    <h2 className="text-lg font-bold text-red-600 mb-4">Relatórios ({relatorios.length})</h2>
-
-                                    {relatorios.length === 0 ? (
-                                        <p className="text-center text-gray-500 py-8">Nenhum relatório enviado.</p>
-                                    ) : (
-                                        <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
-                                            {relatorios.map(r => (
-                                                <Card key={r.id} r={r} currentUser={user} onEdit={editar} onDelete={apagar} />
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Observação compartilhada entre gerentes */}
-                                {user.tipo === 'gerente' && (
-                                    <div className="bg-white p-4 rounded-xl shadow mt-4">
-                                        <h3 className="text-red-600 font-bold mb-2">Observações internas (visível apenas para gerentes)</h3>
-                                        <textarea value={obs} onChange={(e) => setObs(e.target.value)} rows={4} className="w-full p-2 border rounded mb-3"></textarea>
-                                        <div className="flex gap-3">
-                                            <button onClick={salvarObservacao} className="bg-red-600 text-white px-4 py-2 rounded">Salvar Observação</button>
-                                            <button onClick={() => { setObs(''); localStorage.removeItem('obsGerentes'); }} className="bg-white border px-4 py-2 rounded">Limpar</button>
-                                        </div>
-                                    </div>
-                                )}
-
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            );
+        if (!confirm('Confirma exclusão?')) return;
+        try {
+          await db.collection('relatorios').doc(id).delete();
+        } catch (err) {
+          console.error('Erro ao apagar:', err);
+          alert('Erro ao apagar (ver console).');
         }
-    </script>
+      }
+
+      // observacao dos gerentes (doc singleton)
+      async function salvarObservacao() {
+        try {
+          await db.collection('obsGerentes').doc('singleton').set({ texto: obs, updatedAt: new Date().toISOString() });
+          alert('Observação salva');
+        } catch (err) {
+          console.error('Erro ao salvar observação:', err);
+          alert('Erro ao salvar observação (ver console).');
+        }
+      }
+
+      if (!user) return <Login perfis={perfis} onLogin={handleLogin} />;
+
+      return (
+        <div className="min-h-screen p-6 bg-red-50">
+          <div className="max-w-5xl mx-auto space-y-6">
+            <header className="flex items-center justify-between bg-white p-4 rounded-xl shadow">
+              <div className="flex items-center gap-4">
+                <img src={FOTO_CAPA} className="w-16 h-16 rounded-full border-4 border-red-600" />
+                <div>
+                  <h1 className="text-xl font-bold text-red-700">Relatório Fabrika Mall Pará de Minas</h1>
+                  <p className="text-gray-600">Logado como: <span className="font-semibold">{user.nome}</span></p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <button onClick={() => { setUser(null); }} className="px-4 py-2 bg-white border rounded text-red-600">Sair</button>
+              </div>
+            </header>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {user.tipo === 'operador' && (
+                <div className="bg-white p-6 rounded-xl shadow">
+                  <h2 className="text-lg font-bold text-red-600 mb-4">Enviar Relatório</h2>
+
+                  <label className="text-sm font-medium">Nome do Brigadista (obrigatório)</label>
+                  <input value={brigadistaNome} onChange={e => setBrigadistaNome(e.target.value)} className="w-full p-2 border rounded mb-3" />
+
+                  <label className="text-sm font-medium">Descrição (obrigatório)</label>
+                  <textarea value={descricao} onChange={e => setDescricao(e.target.value)} rows={4} className="w-full p-2 border rounded mb-3" />
+
+                  <label className="block mb-3">
+                    <span className="text-sm">Foto (opcional)</span>
+                    <input type="file" accept="image/*" onChange={handleFoto} className="mt-2" />
+                  </label>
+
+                  {fotoPreview && (
+                    <div className="relative mb-3">
+                      <img src={fotoPreview} className="w-full h-48 object-cover rounded" />
+                      <button onClick={() => setFotoPreview(null)} className="absolute top-2 right-2 bg-red-600 text-white p-2 rounded">Excluir</button>
+                    </div>
+                  )}
+
+                  <div className="flex gap-3">
+                    <button onClick={enviar} className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded font-semibold flex items-center justify-center gap-2"><Icons.Send/>Enviar</button>
+                    <button onClick={() => { setBrigadistaNome(''); setDescricao(''); setFotoPreview(null); }} className="flex-1 bg-white border rounded py-2">Limpar</button>
+                  </div>
+                </div>
+              )}
+
+              <div className={user.tipo === 'operador' ? 'md:col-span-2' : 'md:col-span-3'}>
+                <div className="bg-white p-6 rounded-xl shadow">
+                  <h2 className="text-lg font-bold text-red-600 mb-4">Relatórios ({relatorios.length})</h2>
+
+                  {relatorios.length === 0 ? (
+                    <p className="text-center text-gray-500 py-8">Nenhum relatório enviado.</p>
+                  ) : (
+                    <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+                      {relatorios.map(r => (
+                        <Card key={r.id} r={r} currentUser={user} onEdit={editar} onDelete={apagar} />
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {user.tipo === 'gerente' && (
+                  <div className="bg-white p-4 rounded-xl shadow mt-4">
+                    <h3 className="text-red-600 font-bold mb-2">Observações internas (visível apenas para gerentes)</h3>
+                    <textarea value={obs} onChange={(e) => setObs(e.target.value)} rows={4} className="w-full p-2 border rounded mb-3"></textarea>
+                    <div className="flex gap-3">
+                      <button onClick={salvarObservacao} className="bg-red-600 text-white px-4 py-2 rounded">Salvar Observação</button>
+                      <button onClick={() => { setObs(''); db.collection('obsGerentes').doc('singleton').delete().catch(()=>{}); }} className="bg-white border px-4 py-2 rounded">Limpar</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // monta app
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
 </body>
-
 </html>
