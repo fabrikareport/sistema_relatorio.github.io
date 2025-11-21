@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Relatório Fabrika Mall Pará de Minas</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
+
 <body class="bg-red-50">
     <div id="root"></div>
 
@@ -71,7 +73,7 @@
                                             className="flex-1 bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl font-semibold"
                                         >{p.nome}</button>
                                         {/* botão separado para limpar eventual input */}
-                                        <button onClick={() => { if (p.tipo!=='gerente') return; setPasswords(prev=>({ ...prev, [p.id]: '' })) }}
+                                        <button onClick={() => { if (p.tipo !== 'gerente') return; setPasswords(prev => ({ ...prev, [p.id]: '' })) }}
                                             className="ml-2 px-4 py-3 bg-white border rounded-xl">Limpar</button>
                                     </div>
 
@@ -243,10 +245,10 @@
                                     <h2 className="text-lg font-bold text-red-600 mb-4">Enviar Relatório</h2>
 
                                     <label className="text-sm font-medium">Nome do Brigadista (obrigatório)</label>
-                                    <input value={brigadistaNome} onChange={e=>setBrigadistaNome(e.target.value)} className="w-full p-2 border rounded mb-3" />
+                                    <input value={brigadistaNome} onChange={e => setBrigadistaNome(e.target.value)} className="w-full p-2 border rounded mb-3" />
 
                                     <label className="text-sm font-medium">Descrição (obrigatório)</label>
-                                    <textarea value={descricao} onChange={e=>setDescricao(e.target.value)} rows={4} className="w-full p-2 border rounded mb-3" />
+                                    <textarea value={descricao} onChange={e => setDescricao(e.target.value)} rows={4} className="w-full p-2 border rounded mb-3" />
 
                                     <label className="block mb-3">
                                         <span className="text-sm">Foto (opcional)</span>
@@ -256,13 +258,13 @@
                                     {fotoPreview && (
                                         <div className="relative mb-3">
                                             <img src={fotoPreview} className="w-full h-48 object-cover rounded" />
-                                            <button onClick={()=>setFotoPreview(null)} className="absolute top-2 right-2 bg-red-600 text-white p-2 rounded">Excluir</button>
+                                            <button onClick={() => setFotoPreview(null)} className="absolute top-2 right-2 bg-red-600 text-white p-2 rounded">Excluir</button>
                                         </div>
                                     )}
 
                                     <div className="flex gap-3">
                                         <button onClick={enviar} className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded font-semibold flex items-center justify-center gap-2"><Icons.Send />Enviar</button>
-                                        <button onClick={()=>{ setBrigadistaNome(''); setDescricao(''); setFotoPreview(null); }} className="flex-1 bg-white border rounded py-2">Limpar</button>
+                                        <button onClick={() => { setBrigadistaNome(''); setDescricao(''); setFotoPreview(null); }} className="flex-1 bg-white border rounded py-2">Limpar</button>
                                     </div>
                                 </div>
                             )}
@@ -286,10 +288,10 @@
                                 {user.tipo === 'gerente' && (
                                     <div className="bg-white p-4 rounded-xl shadow mt-4">
                                         <h3 className="text-red-600 font-bold mb-2">Observações internas (visível apenas para gerentes)</h3>
-                                        <textarea value={obs} onChange={(e)=>setObs(e.target.value)} rows={4} className="w-full p-2 border rounded mb-3"></textarea>
+                                        <textarea value={obs} onChange={(e) => setObs(e.target.value)} rows={4} className="w-full p-2 border rounded mb-3"></textarea>
                                         <div className="flex gap-3">
                                             <button onClick={salvarObservacao} className="bg-red-600 text-white px-4 py-2 rounded">Salvar Observação</button>
-                                            <button onClick={()=>{ setObs(''); localStorage.removeItem('obsGerentes'); }} className="bg-white border px-4 py-2 rounded">Limpar</button>
+                                            <button onClick={() => { setObs(''); localStorage.removeItem('obsGerentes'); }} className="bg-white border px-4 py-2 rounded">Limpar</button>
                                         </div>
                                     </div>
                                 )}
@@ -302,6 +304,25 @@
         }
 
         ReactDOM.render(<App />, document.getElementById('root'));
+
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "firebase/app";
+        // TODO: Add SDKs for Firebase products that you want to use
+        // https://firebase.google.com/docs/web/setup#available-libraries
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyANW3zGkmJM7uDBhZ2JhDzzp_KfSSR22zA",
+            authDomain: "relatorio-sistema.firebaseapp.com",
+            projectId: "relatorio-sistema",
+            storageBucket: "relatorio-sistema.firebasestorage.app",
+            messagingSenderId: "986388355222",
+            appId: "1:986388355222:web:dc464f96ee027846ad0ab7"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
     </script>
 </body>
+
 </html>
